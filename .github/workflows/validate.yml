@@ -6,11 +6,28 @@ on:
     branches: [ main ]
 
 jobs:
-  readme:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Ensure scaffold files exist
+
+      - name: Ensure required files exist
         run: |
           test -f README.md
           test -f LICENSE
+          test -f .release-versions.env
+          test -f scripts/init-db.sh
+          test -f tests/validate-schemas.sh
+          test -f tests/validate-scripts.sh
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y duckdb python3-pip
+          python3 -m pip install -r requirements.txt
+
+      - name: Validate schemas
+        run: bash tests/validate-schemas.sh /tmp/aurekai-duckdb-ci.db
+
+      - name: Validate scripts
+        run: bash tests/validate-scripts.sh /tmp/aurekai-duckdb-ci.db
